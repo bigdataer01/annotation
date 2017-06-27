@@ -1,0 +1,45 @@
+package net.bigdataer.demo.processor;
+
+import net.bigdataer.demo.annotation.VersionCheckAnnotation;
+
+import javax.annotation.processing.*;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
+import javax.tools.Diagnostic;
+import java.util.Set;
+
+/**
+ * Created by liuxuecheng on 2017/6/26.
+ *
+ * @58corp
+ */
+@SupportedAnnotationTypes("net.bigdataer.demo.annotation.VersionCheckAnnotation")
+@SupportedSourceVersion(SourceVersion.RELEASE_6)
+public class VersionCheckProcessor extends AbstractProcessor {
+    private Messager messager;
+    private Elements elementsUtil;
+    @Override
+    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        //遍历被VersionCheckAnnotation标记的元素
+        for(Element element:roundEnv.getElementsAnnotatedWith(VersionCheckAnnotation.class)){
+            //获取当前元素上的注解
+            VersionCheckAnnotation versionCheckAnnotation = element.getAnnotation(VersionCheckAnnotation.class);
+            int major_version = versionCheckAnnotation.major_version();
+            int minor_version = versionCheckAnnotation.minor_version();
+            if(major_version<minor_version){
+                messager.printMessage(Diagnostic.Kind.ERROR,"major_version should bigger than minor_version",element);
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public synchronized void init(ProcessingEnvironment processingEnv) {
+        super.init(processingEnv);
+        messager = processingEnv.getMessager();
+        elementsUtil = processingEnv.getElementUtils();
+    }
+}
